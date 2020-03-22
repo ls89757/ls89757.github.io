@@ -7,15 +7,15 @@
   
   <title>快速排序代码再思考 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="之前刷LeetCode时候用到快排，发现自己手写快速排序代码不出错有些困难，后来仔细研读了一下《Data Structures and Alogirithm Analysis in C++》这里面的代码">
+  <meta name="description" content="之前刷LeetCode时候用到快排，发现自己手写快速排序代码不出错有些困难，后来仔细研读了一下《Data Structures and Alogirithm Analysis in C++》这里面的代码  快速排序与BST的关系​    我们知道，BST是可以用于排序算法的，具体做法是我们可以使用待排序序列构建一个BST树，然后通过中序遍历的方式得到排好的序列。而BST中的根节点与每次快速排序所">
 <meta property="og:type" content="article">
 <meta property="og:title" content="快速排序代码再思考">
 <meta property="og:url" content="http://yoursite.com/2020/03/22/%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F%E4%BB%A3%E7%A0%81%E5%86%8D%E6%80%9D%E8%80%83/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="之前刷LeetCode时候用到快排，发现自己手写快速排序代码不出错有些困难，后来仔细研读了一下《Data Structures and Alogirithm Analysis in C++》这里面的代码">
+<meta property="og:description" content="之前刷LeetCode时候用到快排，发现自己手写快速排序代码不出错有些困难，后来仔细研读了一下《Data Structures and Alogirithm Analysis in C++》这里面的代码  快速排序与BST的关系​    我们知道，BST是可以用于排序算法的，具体做法是我们可以使用待排序序列构建一个BST树，然后通过中序遍历的方式得到排好的序列。而BST中的根节点与每次快速排序所">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2020-03-22T12:38:46.000Z">
-<meta property="article:modified_time" content="2020-03-22T12:47:54.556Z">
+<meta property="article:modified_time" content="2020-03-22T13:28:00.108Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
   
@@ -88,7 +88,29 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>之前刷LeetCode时候用到快排，发现自己手写快速排序代码不出错有些困难，后来仔细<br>研读了一下《Data Structures and Alogirithm Analysis in C++》这里面的代码</p>
+        <blockquote>
+<p>之前刷LeetCode时候用到快排，发现自己手写快速排序代码不出错有些困难，后来仔细研读了一下《Data Structures and Alogirithm Analysis in C++》这里面的代码</p>
+</blockquote>
+<h4 id="快速排序与BST的关系"><a href="#快速排序与BST的关系" class="headerlink" title="快速排序与BST的关系"></a>快速排序与BST的关系</h4><p>​    我们知道，BST是可以用于排序算法的，具体做法是我们可以使用待排序序列构建一个BST树，然后通过中序遍历的方式得到排好的序列。而BST中的根节点与每次快速排序所选择的pivot元素从逻辑上理解是十分相似的。在快速排序中，我们每次选择一个pivot元素，让所有的元素分到pivot的两边，一边全都小于pivot，一边全都大于pivot，其实如果分隔的子数组理解为一颗树，那么快速排序的过程其实就是构建BST的过程。</p>
+<h4 id="快速排序的代码理解"><a href="#快速排序的代码理解" class="headerlink" title="快速排序的代码理解"></a>快速排序的代码理解</h4><p>原书中的代码如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> E, <span class="keyword">typename</span> Comp&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">qsort</span><span class="params">(E A[], <span class="keyword">int</span> i, <span class="keyword">int</span> j)</span> </span>&#123; <span class="comment">// Quicksort</span></span><br><span class="line">  <span class="keyword">if</span> (j &lt;= i) <span class="keyword">return</span>; <span class="comment">// Don’t sort 0 or 1 element</span></span><br><span class="line">  <span class="keyword">int</span> pivotindex = findpivot(A, i, j);</span><br><span class="line">  swap(A, pivotindex, j);    <span class="comment">// Put pivot at end</span></span><br><span class="line">  <span class="comment">// k will be the first position in the right subarray</span></span><br><span class="line">  <span class="keyword">int</span> k = partition&lt;E,Comp&gt;(A, i<span class="number">-1</span>, j, A[j]);</span><br><span class="line">  swap(A, k, j);             <span class="comment">// Put pivot in place</span></span><br><span class="line">  qsort&lt;E,Comp&gt;(A, i, k<span class="number">-1</span>);</span><br><span class="line">  qsort&lt;E,Comp&gt;(A, k+<span class="number">1</span>, j);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中partition部分代码如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> E, <span class="keyword">typename</span> Comp&gt;</span><br><span class="line"><span class="function"><span class="keyword">inline</span> <span class="keyword">int</span> <span class="title">partition</span><span class="params">(E A[], <span class="keyword">int</span> l, <span class="keyword">int</span> r, E&amp; pivot)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">do</span> &#123;             <span class="comment">// Move the bounds inward until they meet</span></span><br><span class="line">    <span class="keyword">while</span> (Comp::prior(A[++l], pivot));  <span class="comment">// Move l right and</span></span><br><span class="line">    <span class="keyword">while</span> ((l &lt; r) &amp;&amp; Comp::prior(pivot, A[--r])); <span class="comment">// r left</span></span><br><span class="line">    swap(A, l, r);              <span class="comment">// Swap out-of-place values</span></span><br><span class="line">  &#125; <span class="keyword">while</span> (l &lt; r);              <span class="comment">// Stop when they cross</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> l;</span><br><span class="line">     <span class="comment">// Return first position in right partition</span></span><br></pre></td></tr></table></figure>
+
+<p>​    关于递归思想就不在详述，快速排序的主要过程就是</p>
+<ol>
+<li>根据某种策略选择一个pivot元素</li>
+<li>对需要排序的数组范围做分堆（即小于的pivot分到pivot左边，大于等于分到pivot右边）[代码中partition过程]</li>
+<li>对分堆后的子数组范围递归进行快速排序</li>
+</ol>
+<h5 id="代码注意点"><a href="#代码注意点" class="headerlink" title="代码注意点"></a>代码注意点</h5><ul>
+<li>在执行partition之前，将选择的pivot与最后一个元素做了交换，而在执行完分隔后又将pivot与最后一个元素交换回来，这是因为我们只需要对除了pivot以外的元素做分堆处理。而最后lr相遇的位置，一定是比pivot大的位置，与最后一个位置交换回来，那么lr指针共同指向的位置的元素应该处于正确的地方。</li>
+<li>传入数组范围：左范围是<strong>真正排序左索引-1</strong>，而右范围是<strong>真正排序右索引+1</strong>，由于pivot与最后一个元素做了交换，所以传参时候右范围不动，左范围减一即可。原因是：每次开始寻找正确位置时候，都是将索引向中心移动一下再去考察指向的位置是否满足条件。</li>
+<li>移动左指针不需要判断是否l&lt;r：因为对于所有的元素来说，不可能所有的元素全都比pivot小，毕竟pivot自己不比自己小，因此不会发生越界，使得l跑到一个不应该判断的区域中去。</li>
+<li>移动右指针需要判断l&lt;r并且要首先判断：如果不首先判断则会导致r向左移动使得本该到达最终终点的位置错误。</li>
+</ul>
+<p>可以说，这本书中partition部分的代码写的算是非常精妙了，可以当做快速排序的模板去记忆。</p>
 
       
     </div>
