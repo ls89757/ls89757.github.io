@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2022-04-19T09:29:14.787Z</updated>
+  <updated>2022-04-20T01:25:21.915Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,26 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Linux 调试与配置</title>
+    <link href="http://example.com/2022/04/20/Linux%E8%B0%83%E8%AF%95%E4%B8%8E%E9%85%8D%E7%BD%AE/"/>
+    <id>http://example.com/2022/04/20/Linux%E8%B0%83%E8%AF%95%E4%B8%8E%E9%85%8D%E7%BD%AE/</id>
+    <published>2022-04-20T01:23:08.000Z</published>
+    <updated>2022-04-20T01:25:21.915Z</updated>
+    
+    <content type="html"><![CDATA[<h4 id="Android内核插入模块导致kenrel版本字符串过长（不过编译）"><a href="#Android内核插入模块导致kenrel版本字符串过长（不过编译）" class="headerlink" title="Android内核插入模块导致kenrel版本字符串过长（不过编译）"></a>Android内核插入模块导致kenrel版本字符串过长（不过编译）</h4><p>需求：在Android内核中加入插入一个内核源码模块，并且制作成build-in启动。</p><p>问题：kernel的版本字符串有一定的生成规则，在AOSP10中规定了UTS_RELEASE的长度为为64，插入一个源码模块后，其版本字符串超出UTS_LEN</p><p>解决想法1：修改UTS_LEN到更长，可以通过编译，不能开机</p><p>解决想法2：修改版本字符串的生成规则，例如使用规定的串做初始化</p><h4 id="dump-stack包含的头文件"><a href="#dump-stack包含的头文件" class="headerlink" title="dump_stack包含的头文件"></a>dump_stack包含的头文件</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;linux/kprobes.h&gt;</span><br><span class="line">#include &lt;asm/traps.h&gt;</span><br></pre></td></tr></table></figure><h4 id="本机编译替换内核"><a href="#本机编译替换内核" class="headerlink" title="本机编译替换内核"></a>本机编译替换内核</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">拷贝本机.config</span> </span><br><span class="line">cp /boot/xxxx-config  kernelsrc/.config</span><br><span class="line">make nconfig / make menuconfig # 剩余由于版本不一致的CONFIG会有默认配置补齐</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">编译</span></span><br><span class="line">make -j6</span><br><span class="line">sudo make INSTALL_MOD_STRIP=1 modules_install  </span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">INSTALL_MOD_STRIP=1 抽离符号表 否则ramdisk过大加载不起来</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">modules_install 继承到initrd中去</span></span><br><span class="line">sudo make install </span><br></pre></td></tr></table></figure><h4 id="大型C项目的IDE内跳转配置"><a href="#大型C项目的IDE内跳转配置" class="headerlink" title="大型C项目的IDE内跳转配置"></a>大型C项目的IDE内跳转配置</h4><p>大型C项目往往会在编译时指定大量的define定义内容，例如linux会生成*.config*文件，而在vscode中浏览代码时候由于没有这些define条件，会出现确实大量头文件的情况，可能导致vscode报各种红线错误，找不到符号的defination等问题。可以使用以下方式恢复，以编译linux内核为例。</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">编译时候使用bear命令生成compile_command.json  bear命令在Ubuntu/Debian中可以apt安装</span></span><br><span class="line">bear make -j6</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">在项目vscode中编辑c_cpp_properties.json，加入compileCommands选项</span></span><br><span class="line">&#123;</span><br><span class="line">    &quot;configurations&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;name&quot;: &quot;Linux&quot;,</span><br><span class="line">            &quot;includePath&quot;: [</span><br><span class="line">                &quot;$&#123;workspaceFolder&#125;/**&quot;</span><br><span class="line">            ],</span><br><span class="line">            &quot;defines&quot;: [],</span><br><span class="line">            &quot;compilerPath&quot;: &quot;/usr/bin/gcc&quot;,</span><br><span class="line">            &quot;cStandard&quot;: &quot;gnu11&quot;,</span><br><span class="line">            &quot;cppStandard&quot;: &quot;gnu++14&quot;,</span><br><span class="line">            &quot;intelliSenseMode&quot;: &quot;linux-gcc-x64&quot;,</span><br><span class="line">            &quot;compileCommands&quot;: &quot;$&#123;workspaceFolder&#125;/compile_commands.json&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    ],</span><br><span class="line">    &quot;version&quot;: 4</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;h4 id=&quot;Android内核插入模块导致kenrel版本字符串过长（不过编译）&quot;&gt;&lt;a href=&quot;#Android内核插入模块导致kenrel版本字符串过长（不过编译）&quot; class=&quot;headerlink&quot; title=&quot;Android内核插入模块导致kenrel版本字</summary>
+      
+    
+    
+    
+    
+  </entry>
   
   <entry>
     <title>读论文心得</title>

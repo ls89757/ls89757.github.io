@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.11.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="Android内核插入模块导致kenrel版本字符串过长（不过编译）需求：在Android内核中加入插入一个内核源码模块，并且制作成build-in启动。 问题：kernel的版本字符串有一定的生成规则，在AOSP10中规定了UTS_RELEASE的长度为为64，插入一个源码模块后，其版本字符串超出UTS_LEN 解决想法1：修改UTS_LEN到更长，可以通过编译，不能开机 解决想法2：修改版本字">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 调试与配置">
+<meta property="og:url" content="http://example.com/2022/04/20/Linux%E8%B0%83%E8%AF%95%E4%B8%8E%E9%85%8D%E7%BD%AE/index.html">
+<meta property="og:site_name" content="SCLnotes">
+<meta property="og:description" content="Android内核插入模块导致kenrel版本字符串过长（不过编译）需求：在Android内核中加入插入一个内核源码模块，并且制作成build-in启动。 问题：kernel的版本字符串有一定的生成规则，在AOSP10中规定了UTS_RELEASE的长度为为64，插入一个源码模块后，其版本字符串超出UTS_LEN 解决想法1：修改UTS_LEN到更长，可以通过编译，不能开机 解决想法2：修改版本字">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-04-20T01:23:08.000Z">
+<meta property="article:modified_time" content="2022-04-20T01:25:21.915Z">
+<meta property="article:author" content="Larry Song">
+<meta property="article:tag" content="compuer system&#x2F;linux kernel&#x2F;storage.etc.">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2022/04/20/Linux%E8%B0%83%E8%AF%95%E4%B8%8E%E9%85%8D%E7%BD%AE/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"http://example.com/2022/04/20/Linux%E8%B0%83%E8%AF%95%E4%B8%8E%E9%85%8D%E7%BD%AE/","path":"2022/04/20/Linux调试与配置/","title":"Linux 调试与配置"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Linux 调试与配置 | SCLnotes</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="SCLnotes" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">SCLnotes</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Android%E5%86%85%E6%A0%B8%E6%8F%92%E5%85%A5%E6%A8%A1%E5%9D%97%E5%AF%BC%E8%87%B4kenrel%E7%89%88%E6%9C%AC%E5%AD%97%E7%AC%A6%E4%B8%B2%E8%BF%87%E9%95%BF%EF%BC%88%E4%B8%8D%E8%BF%87%E7%BC%96%E8%AF%91%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">Android内核插入模块导致kenrel版本字符串过长（不过编译）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#dump-stack%E5%8C%85%E5%90%AB%E7%9A%84%E5%A4%B4%E6%96%87%E4%BB%B6"><span class="nav-number">2.</span> <span class="nav-text">dump_stack包含的头文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%AC%E6%9C%BA%E7%BC%96%E8%AF%91%E6%9B%BF%E6%8D%A2%E5%86%85%E6%A0%B8"><span class="nav-number">3.</span> <span class="nav-text">本机编译替换内核</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%A7%E5%9E%8BC%E9%A1%B9%E7%9B%AE%E7%9A%84IDE%E5%86%85%E8%B7%B3%E8%BD%AC%E9%85%8D%E7%BD%AE"><span class="nav-number">4.</span> <span class="nav-text">大型C项目的IDE内跳转配置</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Larry Song</p>
+  <div class="site-description" itemprop="description">主要记录一些coding过程中踩过的坑，读过的论文</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/04/20/Linux%E8%B0%83%E8%AF%95%E4%B8%8E%E9%85%8D%E7%BD%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Larry Song">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SCLnotes">
+      <meta itemprop="description" content="主要记录一些coding过程中踩过的坑，读过的论文">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Linux 调试与配置 | SCLnotes">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux 调试与配置
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2022-04-20 09:23:08 / Modified: 09:25:21" itemprop="dateCreated datePublished" datetime="2022-04-20T09:23:08+08:00">2022-04-20</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h4 id="Android内核插入模块导致kenrel版本字符串过长（不过编译）"><a href="#Android内核插入模块导致kenrel版本字符串过长（不过编译）" class="headerlink" title="Android内核插入模块导致kenrel版本字符串过长（不过编译）"></a>Android内核插入模块导致kenrel版本字符串过长（不过编译）</h4><p>需求：在Android内核中加入插入一个内核源码模块，并且制作成build-in启动。</p>
+<p>问题：kernel的版本字符串有一定的生成规则，在AOSP10中规定了UTS_RELEASE的长度为为64，插入一个源码模块后，其版本字符串超出UTS_LEN</p>
+<p>解决想法1：修改UTS_LEN到更长，可以通过编译，不能开机</p>
+<p>解决想法2：修改版本字符串的生成规则，例如使用规定的串做初始化</p>
+<h4 id="dump-stack包含的头文件"><a href="#dump-stack包含的头文件" class="headerlink" title="dump_stack包含的头文件"></a>dump_stack包含的头文件</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;linux/kprobes.h&gt;</span><br><span class="line">#include &lt;asm/traps.h&gt;</span><br></pre></td></tr></table></figure>
+
+<h4 id="本机编译替换内核"><a href="#本机编译替换内核" class="headerlink" title="本机编译替换内核"></a>本机编译替换内核</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">拷贝本机.config</span> </span><br><span class="line">cp /boot/xxxx-config  kernelsrc/.config</span><br><span class="line">make nconfig / make menuconfig # 剩余由于版本不一致的CONFIG会有默认配置补齐</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">编译</span></span><br><span class="line">make -j6</span><br><span class="line">sudo make INSTALL_MOD_STRIP=1 modules_install  </span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">INSTALL_MOD_STRIP=1 抽离符号表 否则ramdisk过大加载不起来</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">modules_install 继承到initrd中去</span></span><br><span class="line">sudo make install </span><br></pre></td></tr></table></figure>
+
+<h4 id="大型C项目的IDE内跳转配置"><a href="#大型C项目的IDE内跳转配置" class="headerlink" title="大型C项目的IDE内跳转配置"></a>大型C项目的IDE内跳转配置</h4><p>大型C项目往往会在编译时指定大量的define定义内容，例如linux会生成*.config*文件，而在vscode中浏览代码时候由于没有这些define条件，会出现确实大量头文件的情况，可能导致vscode报各种红线错误，找不到符号的defination等问题。可以使用以下方式恢复，以编译linux内核为例。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">编译时候使用bear命令生成compile_command.json  bear命令在Ubuntu/Debian中可以apt安装</span></span><br><span class="line">bear make -j6</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">在项目vscode中编辑c_cpp_properties.json，加入compileCommands选项</span></span><br><span class="line">&#123;</span><br><span class="line">    &quot;configurations&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;name&quot;: &quot;Linux&quot;,</span><br><span class="line">            &quot;includePath&quot;: [</span><br><span class="line">                &quot;$&#123;workspaceFolder&#125;/**&quot;</span><br><span class="line">            ],</span><br><span class="line">            &quot;defines&quot;: [],</span><br><span class="line">            &quot;compilerPath&quot;: &quot;/usr/bin/gcc&quot;,</span><br><span class="line">            &quot;cStandard&quot;: &quot;gnu11&quot;,</span><br><span class="line">            &quot;cppStandard&quot;: &quot;gnu++14&quot;,</span><br><span class="line">            &quot;intelliSenseMode&quot;: &quot;linux-gcc-x64&quot;,</span><br><span class="line">            &quot;compileCommands&quot;: &quot;$&#123;workspaceFolder&#125;/compile_commands.json&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    ],</span><br><span class="line">    &quot;version&quot;: 4</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/04/19/%E8%AF%BB%E8%AE%BA%E6%96%87%E5%BF%83%E5%BE%97/" rel="prev" title="读论文心得">
+                  <i class="fa fa-chevron-left"></i> 读论文心得
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Larry Song</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
